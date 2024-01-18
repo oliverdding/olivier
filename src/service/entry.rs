@@ -1,9 +1,12 @@
+use std::time::Duration;
+
 use anyhow::Result;
-use axum::{routing::get, Router};
+use axum::{extract::MatchedPath, http::Request, response::Response, routing::get, Router};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
 use tokio_graceful_shutdown::SubsystemHandle;
-use tracing::{debug, info};
+use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
+use tracing::{debug, info, info_span, warn, Span};
 
 use crate::config;
 use crate::service::routes::v0 as route;
@@ -37,10 +40,6 @@ impl config::Service {
 
         let app = Router::new()
             .route(
-                &format!("{}{}", &self.prefix, "api/health"),
-                get(route::root),
-            )
-            .route(
                 &format!("{}{}", &self.prefix, "api/v0/item"),
                 get(route::root).post(route::root),
             )
@@ -68,7 +67,32 @@ impl config::Service {
                 &format!("{}{}", &self.prefix, "api/v0/newaskes"),
                 get(route::root),
             )
-            .with_state(db);
+            .with_state(db)
+            .layer(
+                TraceLayer::new_for_http()
+                    .make_span_with(|request: &Request<_>| {
+                        let matched_path = request
+                            .extensions()
+                            .get::<MatchedPath>()
+                            .map(MatchedPath::as_str);
+
+                        info_span!(
+                            "http_request",
+                            method = ?request.method(),
+                            matched_path,
+                        )
+                    })
+                    .on_request(|_request: &Request<_>, _span: &Span| debug!("request received"))
+                    .on_response(|_response: &Response, _latency: Duration, _span: &Span| {
+                        _span.record("status_code", &tracing::field::display(_response.status()));
+                    })
+                    .on_failure(
+                        |_error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
+                            warn!("request failed with error: {}", _error);
+                        },
+                    ),
+            )
+            .route(&format!("{}{}", &self.prefix, "health"), get(route::root));
 
         let listener = tokio::net::TcpListener::bind(format!(
             "{host}:{port}",
