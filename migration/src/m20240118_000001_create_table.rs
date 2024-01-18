@@ -68,10 +68,14 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .default(Value::Bool(Some(false))),
                     )
-                    .col(ColumnDef::new(Item::Category).enumeration(
-                        Category::Table,
-                        <Category as sea_orm::Iterable>::iter().skip(1),
-                    ))
+                    .col(
+                        ColumnDef::new(Item::Category)
+                            .enumeration(
+                                Category::Table,
+                                <Category as sea_orm::Iterable>::iter().skip(1),
+                            )
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(Item::By).big_integer().not_null())
                     .col(
                         ColumnDef::new(Item::Time)

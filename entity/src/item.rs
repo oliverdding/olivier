@@ -9,7 +9,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i64,
     pub deleted: bool,
-    pub category: Option<Category>,
+    pub category: Category,
     pub by: i64,
     pub time: DateTime,
     pub text: String,
