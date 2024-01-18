@@ -2,18 +2,34 @@
 name = "olivier"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.56"
+authors = ["oliver ding <oliverdding@outlook.com>"]
+categories = ["command-line-utilities"]
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1"
+axum = { version = "0.7", features = ["http2", "macros"] }
+chrono = "^0.4"
+config = "0.13"
+directories = "5"
+entity = { path = "entity" }
+migration = { path = "migration" }
 sea-orm = { version = "^0.12.0", features = [
     "sqlx-postgres",
     "runtime-tokio-rustls",
     "macros",
 ] }
+serde = { version = "1", features = ["derive"] }
+thiserror = "1"
+tracing = "0.1"
+tracing-log = "0.2"
+tracing-subscriber = "0.3"
+tracing-appender = "0.2"
 tokio = { version = "1", features = ["full"] }
-entity = { path = "entity" }
-migration = { path = "migration" }
+tokio-graceful-shutdown = "0.14"
 
 [workspace]
 members = [".", "entity", "migration"]

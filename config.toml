@@ -1,0 +1,15 @@
+[log]
+level = "debug"
+config = "tower_http=debug,axum::rejection=trace"
+
+[log.file]
+enabled = false
+# path = "/tmp/oi"
+
+[service]
+host = "0.0.0.0"
+port = 8080
+prefix = "/"
+
+[service.database]
+uri = "postgres://postgres:postgres@127.0.0.1:5432/postgres"

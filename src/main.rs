@@ -1,16 +1,24 @@
-use sea_orm::{Database, DbErr};
-use migration::{Migrator, MigratorTrait};
+mod config;
+mod error;
+mod log;
+mod service;
 
-
-const DATABASE_URL: &str = "postgres://postgres:postgres@localhost:5432";
-
-async fn run() -> Result<(), DbErr> {
-    let db: sea_orm::prelude::DatabaseConnection = Database::connect(DATABASE_URL).await?;
-
-    Migrator::up(&db, None).await
-}
+use anyhow::Result;
+use tokio::time::Duration;
+use tokio_graceful_shutdown::{SubsystemBuilder, Toplevel};
 
 #[tokio::main]
-async fn main() -> Result<(), DbErr> {
-    run().await
+async fn main() -> Result<()> {
+    let global_config = config::GlobalConfig::new().await?;
+    let _guard = log::configure_log(&global_config.log).await?;
+
+    Toplevel::new(|s| async move {
+        s.start(SubsystemBuilder::new("service", |a| {
+            global_config.service.run(a)
+        }));
+    })
+    .catch_signals()
+    .handle_shutdown_requests(Duration::from_millis(1000))
+    .await
+    .map_err(Into::into)
 }
