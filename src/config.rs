@@ -20,7 +20,6 @@ pub struct GlobalConfig {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Log {
     pub level: String,
-    pub config: String,
     pub file: LogFile,
 }
 
@@ -63,8 +62,6 @@ impl GlobalConfig {
 
         let config_builder = Config::builder()
             .set_default("log.level", "info")
-            .map_err(OIError::ConfigurationError)?
-            .set_default("log.config", "tower_http=debug,axum::rejection=trace")
             .map_err(OIError::ConfigurationError)?
             .set_default("log.file.enabled", false)
             .map_err(OIError::ConfigurationError)?

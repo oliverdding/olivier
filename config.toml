@@ -1,6 +1,5 @@
 [log]
 level = "debug"
-config = "tower_http=debug,axum::rejection=trace"
 
 [log.file]
 enabled = false
