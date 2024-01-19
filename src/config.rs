@@ -48,7 +48,7 @@ impl GlobalConfig {
         let project_dir = match ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION) {
             Some(v) => v,
             None => {
-                return Err(OIError::Supplementary(
+                return Err(OIError::LoadConfig(
                     "error getting configurations path following XDG base directory".to_owned(),
                 )
                 .into());
@@ -62,38 +62,40 @@ impl GlobalConfig {
 
         let config_builder = Config::builder()
             .set_default("log.level", "info")
-            .map_err(OIError::ConfigurationError)?
+            .map_err(OIError::Config)?
             .set_default("log.file.enabled", false)
-            .map_err(OIError::ConfigurationError)?
+            .map_err(OIError::Config)?
             .set_default(
                 "log.file.path",
                 project_dir
                     .cache_dir()
                     .to_str()
-                    .ok_or(OIError::Supplementary(
+                    .ok_or(OIError::LoadConfig(
                         "error getting cache path".to_owned(),
                     ))?,
             )
-            .map_err(OIError::ConfigurationError)?
+            .map_err(OIError::Config)?
             .set_default("log.file.level", "info")
-            .map_err(OIError::ConfigurationError)?
+            .map_err(OIError::Config)?
             .set_default("service.host", "0.0.0.0")
-            .map_err(OIError::ConfigurationError)?
+            .map_err(OIError::Config)?
             .set_default("service.port", 3000)
-            .map_err(OIError::ConfigurationError)?
+            .map_err(OIError::Config)?
             .set_default(
                 "service.database.uri",
                 "postgres://postgres:postgres@127.0.0.1:5432/postgres",
             )
-            .map_err(OIError::ConfigurationError)?
+            .map_err(OIError::Config)?
             .set_default("service.prefix", "/")
-            .map_err(OIError::ConfigurationError)?
+            .map_err(OIError::Config)?
             .add_source(File::with_name("/etc/olivier/config").required(false))
             .add_source(File::from(home_path.join("config")).required(false))
             .add_source(
                 File::from(
                     env::current_dir()
-                        .map_err(|err| OIError::Supplementary(err.to_string()))?
+                        .map_err(|err| {
+                            OIError::LoadConfig(format!("cannot get current dir: {err}"))
+                        })?
                         .join("config"),
                 )
                 .required(false),
@@ -106,8 +108,8 @@ impl GlobalConfig {
 
         Ok(config_builder
             .build()
-            .map_err(OIError::ConfigurationError)?
+            .map_err(OIError::Config)?
             .try_deserialize()
-            .map_err(OIError::ConfigurationError)?)
+            .map_err(OIError::Config)?)
     }
 }

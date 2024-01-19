@@ -9,7 +9,8 @@ use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
 use tracing::{debug, error, info, info_span, warn, Span};
 
 use crate::config;
-use crate::service::routes::v0 as route;
+use crate::error::OIError;
+use crate::service::routes::{self, v0};
 
 impl config::Service {
     pub async fn run(self, subsys: SubsystemHandle) -> Result<()> {
@@ -41,31 +42,31 @@ impl config::Service {
         let app = Router::new()
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/item"),
-                get(route::root).post(route::root),
+                get(v0::root).post(v0::root),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/user"),
-                get(route::get_user).post(route::post_user),
+                get(v0::get_user).post(v0::post_user),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/maxitem"),
-                get(route::root),
+                get(v0::root),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/topstories"),
-                get(route::root),
+                get(v0::root),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/newstories"),
-                get(route::root),
+                get(v0::root),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/topaskes"),
-                get(route::root),
+                get(v0::root),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/newaskes"),
-                get(route::root),
+                get(v0::root),
             )
             .with_state(db)
             .layer(
@@ -82,7 +83,7 @@ impl config::Service {
                             matched_path,
                         )
                     })
-                    .on_request(|_request: &Request<_>, _span: &Span| debug!("request received"))
+                    .on_request(|_request: &Request<_>, _span: &Span| info!("request received"))
                     .on_response(|_response: &Response, _latency: Duration, _span: &Span| {
                         _span.record("status_code", &tracing::field::display(_response.status()));
                     })
@@ -92,7 +93,10 @@ impl config::Service {
                         },
                     ),
             )
-            .route(&format!("{}{}", &self.prefix, "health"), get(route::root));
+            .route(
+                &format!("{}{}", &self.prefix, "health"),
+                get(routes::health).head(routes::health),
+            );
 
         let listener = tokio::net::TcpListener::bind(format!(
             "{host}:{port}",
@@ -100,11 +104,14 @@ impl config::Service {
             port = self.port
         ))
         .await
-        .unwrap();
+        .map_err(OIError::Service)?;
 
-        info!("listening on {}", listener.local_addr().unwrap());
+        info!(
+            "listening on {}",
+            listener.local_addr().map_err(OIError::Service)?
+        );
 
-        axum::serve(listener, app).await.unwrap();
+        axum::serve(listener, app).await.map_err(OIError::Service)?;
 
         Ok(())
     }

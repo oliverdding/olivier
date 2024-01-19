@@ -124,18 +124,6 @@ impl IntoResponse for Response {
     }
 }
 
-#[derive(Debug, Serialize)]
-pub struct ErrorResponse {
-    pub code: i32,
-    pub reason: String,
-}
-
-impl IntoResponse for ErrorResponse {
-    fn into_response(self) -> axum::response::Response {
-        axum::Json(self).into_response()
-    }
-}
-
 #[derive(Deserialize)]
 pub struct GetUserRequest {
     pub id: usize,
