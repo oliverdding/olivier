@@ -6,7 +6,7 @@ use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
 use tokio_graceful_shutdown::SubsystemHandle;
 use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
-use tracing::{debug, info, info_span, warn, Span};
+use tracing::{debug, error, info, info_span, warn, Span};
 
 use crate::config;
 use crate::service::routes::v0 as route;
@@ -16,11 +16,11 @@ impl config::Service {
         info!("service started");
         tokio::select! {
             _ = subsys.on_shutdown_requested() => {
-                info!("the service is passively shut down");
+                warn!("the service is passively shut down");
             },
             res = self.serve() => {
                 if let Err(err) = res {
-                    info!("the service if actively terminated with error: {}", err);
+                    error!("the service if actively terminated with error: {}", err);
                 }else {
                     info!("the service is actively terminated");
                 }
