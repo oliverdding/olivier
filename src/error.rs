@@ -1,5 +1,6 @@
 use std::io;
 
+use axum::extract::rejection::{JsonRejection, PathRejection, QueryRejection};
 use config::ConfigError;
 use thiserror::Error;
 
@@ -26,5 +27,14 @@ pub enum ServiceError {
     Database(#[from] sea_orm::DbErr),
 
     #[error("cannot find user with id {0}")]
-    UserNotFound(usize),
+    UserNotFound(i64),
+
+    #[error(transparent)]
+    JsonExtractorRejection(#[from] JsonRejection),
+
+    #[error(transparent)]
+    QueryExtractorRejection(#[from] QueryRejection),
+
+    #[error(transparent)]
+    PathExtractorRejection(#[from] PathRejection),
 }

@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use anyhow::Result;
+use axum::routing::post;
 use axum::{extract::MatchedPath, http::Request, response::Response, routing::get, Router};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
@@ -42,11 +43,16 @@ impl config::Service {
         let app = Router::new()
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/item"),
-                get(v0::root).post(v0::root),
+                post(v0::root),
             )
+            .route(&format!("{}{}", &self.prefix, "api/v0/item"), get(v0::root))
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/user"),
-                get(v0::get_user).post(v0::post_user),
+                post(v0::post_user),
+            )
+            .route(
+                &format!("{}{}", &self.prefix, "api/v0/user/:id"),
+                get(v0::get_user).put(v0::put_user).delete(v0::delete_user),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/maxitem"),

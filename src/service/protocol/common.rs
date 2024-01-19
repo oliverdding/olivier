@@ -5,7 +5,7 @@ use crate::error::ServiceError;
 
 #[derive(Debug, Serialize)]
 pub struct ErrorResponse {
-    pub reason: String,
+    pub message: String,
 }
 
 impl IntoResponse for ErrorResponse {
@@ -21,17 +21,17 @@ impl IntoResponse for ServiceError {
                 sea_orm::DbErr::ConnectionAcquire(source) => (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     ErrorResponse {
-                        reason: source.to_string(),
+                        message: source.to_string(),
                     },
                 )
                     .into_response(),
                 sea_orm::DbErr::RecordNotFound(str) => {
-                    (StatusCode::NOT_FOUND, ErrorResponse { reason: str }).into_response()
+                    (StatusCode::NOT_FOUND, ErrorResponse { message: str }).into_response()
                 }
                 _ => (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     ErrorResponse {
-                        reason: "Database error".to_owned(),
+                        message: "Database error".to_owned(),
                     },
                 )
                     .into_response(),
@@ -39,8 +39,29 @@ impl IntoResponse for ServiceError {
             ServiceError::UserNotFound(id) => (
                 StatusCode::NOT_FOUND,
                 ErrorResponse {
-                    reason: format!("User {id} not found"),
+                    message: format!("User {id} not found"),
                 },
+            )
+                .into_response(),
+            ServiceError::JsonExtractorRejection(rejection) => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                ErrorResponse {
+                    message: rejection.body_text(),
+                },
+            )
+                .into_response(),
+            ServiceError::QueryExtractorRejection(rejection) => (
+                StatusCode::BAD_REQUEST,
+                ErrorResponse {
+                    message: rejection.body_text(),
+                },
+            )
+                .into_response(),
+            ServiceError::PathExtractorRejection(rejection) => (
+                    StatusCode::BAD_REQUEST,
+                    ErrorResponse {
+                        message: rejection.body_text(),
+                    },
             )
                 .into_response(),
         }

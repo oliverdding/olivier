@@ -12,6 +12,7 @@ readme = "README.md"
 [dependencies]
 anyhow = "1"
 axum = { version = "0.7", features = ["http2", "macros"] }
+axum-extra = "0.9"
 chrono = "^0.4"
 config = "0.13"
 directories = "5"
