@@ -11,4 +11,4 @@ port = 8080
 prefix = "/"
 
 [service.database]
-uri = "postgres://postgres:postgres@127.0.0.1:5432/postgres"
+uri = "postgres://postgres:po3tGre%y@127.0.0.1:5432/postgres"
