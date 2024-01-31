@@ -59,6 +59,10 @@ impl config::Service {
                 get(v0::get_max_item),
             )
             .route(
+                &format!("{}{}", &self.prefix, "api/v0/maxuser"),
+                get(v0::get_max_user),
+            )
+            .route(
                 &format!("{}{}", &self.prefix, "api/v0/topstories"),
                 get(v0::root),
             )

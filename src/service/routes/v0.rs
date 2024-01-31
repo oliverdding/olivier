@@ -9,14 +9,16 @@ use axum::{
     response::IntoResponse,
 };
 use axum_extra::extract::WithRejection;
-use entity::user::ActiveModel as UserActiveModel;
-use entity::user::Entity as UserEntity;
-use entity::item::Entity as ItemEntity;
-use entity::user::Model as UserModel;
-use entity::item::Model as ItemModel;
 use entity::item::Column as ItemColumn;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, Condition, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect, Set};
-use tracing::{debug, info, warn};
+use entity::item::Entity as ItemEntity;
+use entity::user::ActiveModel as UserActiveModel;
+use entity::user::Column as UserColumn;
+use entity::user::Entity as UserEntity;
+use entity::user::Model as UserModel;
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, QueryOrder, QuerySelect, Set,
+};
+use tracing::info;
 
 #[debug_handler]
 pub async fn get_user(
@@ -121,6 +123,23 @@ pub async fn get_max_item(
     match item {
         Some(item) => Ok(Response::from(item)),
         None => Err(ServiceError::ItemEmpty),
+    }
+}
+
+#[debug_handler]
+pub async fn get_max_user(
+    State(db): State<DatabaseConnection>,
+) -> Result<impl IntoResponse, ServiceError> {
+    let user = UserEntity::find()
+        .order_by_desc(UserColumn::Id)
+        .limit(1)
+        .one(&db)
+        .await
+        .map_err(ServiceError::Database)?;
+
+    match user {
+        Some(user) => Ok(Response::from(user)),
+        None => Err(ServiceError::UserEmpty),
     }
 }
 

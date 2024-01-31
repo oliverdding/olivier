@@ -35,6 +35,9 @@ pub enum ServiceError {
     #[error("no item found in database")]
     ItemEmpty,
 
+    #[error("no user found in database")]
+    UserEmpty,
+
     #[error(transparent)]
     JsonExtractorRejection(#[from] JsonRejection),
 
