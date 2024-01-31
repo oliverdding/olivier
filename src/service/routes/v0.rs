@@ -11,8 +11,12 @@ use axum::{
 use axum_extra::extract::WithRejection;
 use entity::user::ActiveModel as UserActiveModel;
 use entity::user::Entity as UserEntity;
+use entity::item::Entity as ItemEntity;
 use entity::user::Model as UserModel;
-use sea_orm::{ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, Set};
+use entity::item::Model as ItemModel;
+use entity::item::Column as ItemColumn;
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, Condition, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect, Set};
+use tracing::{debug, info, warn};
 
 #[debug_handler]
 pub async fn get_user(
@@ -101,6 +105,23 @@ pub async fn put_user(
     let res: UserModel = user.update(&db).await.map_err(ServiceError::Database)?;
 
     Ok((StatusCode::OK, Response::from(res)))
+}
+
+#[debug_handler]
+pub async fn get_max_item(
+    State(db): State<DatabaseConnection>,
+) -> Result<impl IntoResponse, ServiceError> {
+    let item = ItemEntity::find()
+        .order_by_desc(ItemColumn::Id)
+        .limit(1)
+        .one(&db)
+        .await
+        .map_err(ServiceError::Database)?;
+
+    match item {
+        Some(item) => Ok(Response::from(item)),
+        None => Err(ServiceError::ItemEmpty),
+    }
 }
 
 pub async fn root() -> &'static str {

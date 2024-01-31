@@ -56,7 +56,7 @@ impl config::Service {
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/maxitem"),
-                get(v0::root),
+                get(v0::get_max_item),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/topstories"),
@@ -90,8 +90,9 @@ impl config::Service {
                         )
                     })
                     .on_request(|_request: &Request<_>, _span: &Span| info!("request received"))
-                    .on_response(|_response: &Response, _latency: Duration, _span: &Span| {
-                        _span.record("status_code", &tracing::field::display(_response.status()));
+                    .on_response(|response: &Response, latency: Duration, span: &Span| {
+                        span.record("status_code", &tracing::field::display(response.status()));
+                        info!("response sent in {:?}", latency);
                     })
                     .on_failure(
                         |_error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {

@@ -1,5 +1,6 @@
 use axum::{http::StatusCode, response::IntoResponse};
 use serde::Serialize;
+use tracing::info;
 
 use crate::error::ServiceError;
 
@@ -43,6 +44,23 @@ impl IntoResponse for ServiceError {
                 },
             )
                 .into_response(),
+            ServiceError::PostNotFound(id) => (
+                StatusCode::NOT_FOUND,
+                ErrorResponse {
+                    message: format!("Post {id} not found"),
+                },
+            )
+                .into_response(),
+            ServiceError::ItemEmpty => {
+                info!("Item is empty");
+                (
+                    StatusCode::NO_CONTENT,
+                    ErrorResponse {
+                        message: "Cannot find item in database".to_owned(),
+                    },
+                )
+                    .into_response()
+            }
             ServiceError::JsonExtractorRejection(rejection) => (
                 StatusCode::UNPROCESSABLE_ENTITY,
                 ErrorResponse {
@@ -58,10 +76,10 @@ impl IntoResponse for ServiceError {
             )
                 .into_response(),
             ServiceError::PathExtractorRejection(rejection) => (
-                    StatusCode::BAD_REQUEST,
-                    ErrorResponse {
-                        message: rejection.body_text(),
-                    },
+                StatusCode::BAD_REQUEST,
+                ErrorResponse {
+                    message: rejection.body_text(),
+                },
             )
                 .into_response(),
         }

@@ -29,6 +29,12 @@ pub enum ServiceError {
     #[error("cannot find user with id {0}")]
     UserNotFound(i64),
 
+    #[error("cannot find post with id {0}")]
+    PostNotFound(i64),
+
+    #[error("no item found in database")]
+    ItemEmpty,
+
     #[error(transparent)]
     JsonExtractorRejection(#[from] JsonRejection),
 
