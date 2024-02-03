@@ -9,8 +9,8 @@ use tokio_graceful_shutdown::{SubsystemBuilder, Toplevel};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let global_config = config::GlobalConfig::new().await?;
-    let _guard = log::configure_log(&global_config.log).await?;
+    let global_config = config::GlobalConfig::new()?;
+    let _guard = log::configure_log(&global_config.log)?;
 
     Toplevel::new(|s| async move {
         s.start(SubsystemBuilder::new("service", |a| {

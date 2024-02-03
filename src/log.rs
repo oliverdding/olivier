@@ -7,7 +7,7 @@ use tracing_log::LogTracer;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::prelude::*;
 
-pub async fn configure_log(log_config: &Log) -> Result<Option<WorkerGuard>> {
+pub fn configure_log(log_config: &Log) -> Result<Option<WorkerGuard>> {
     LogTracer::init().expect("failed to set logger");
 
     let mut is_fall_back = false;
