@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use axum::routing::post;
 use axum::{extract::MatchedPath, http::Request, response::Response, routing::get, Router};
 use migration::{Migrator, MigratorTrait};
@@ -10,8 +10,7 @@ use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
 use tracing::{debug, error, info, info_span, warn, Span};
 
 use crate::config;
-use crate::error::OIError;
-use crate::service::routes::{self, v0};
+use crate::routes::{self, v0};
 
 impl config::Service {
     pub async fn run(self, subsys: SubsystemHandle) -> Result<()> {
@@ -115,14 +114,13 @@ impl config::Service {
             port = self.port
         ))
         .await
-        .map_err(OIError::Service)?;
+        .context("cannot bind to the address:port")?;
 
-        info!(
-            "listening on {}",
-            listener.local_addr().map_err(OIError::Service)?
-        );
+        info!("listening on {}", listener.local_addr()?);
 
-        axum::serve(listener, app).await.map_err(OIError::Service)?;
+        axum::serve(listener, app)
+            .await
+            .context("cannot start axum service at given address:port")?;
 
         Ok(())
     }

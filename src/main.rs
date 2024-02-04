@@ -1,7 +1,9 @@
+mod protocol;
+mod routes;
+mod entry;
 mod config;
 mod error;
 mod log;
-mod service;
 
 use anyhow::Result;
 use tokio::time::Duration;

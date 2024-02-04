@@ -1,6 +1,7 @@
+use crate::error::Result;
 use crate::{
     error::ServiceError,
-    service::protocol::v0::{PostUserRequest, Response},
+    protocol::v0::{PostUserRequest, Response},
 };
 use axum::{
     debug_handler,
@@ -18,13 +19,12 @@ use entity::user::Model as UserModel;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, QueryOrder, QuerySelect, Set,
 };
-use tracing::info;
 
 #[debug_handler]
 pub async fn get_user(
     State(db): State<DatabaseConnection>,
     WithRejection(Path(id), _): WithRejection<Path<i64>, ServiceError>,
-) -> Result<impl IntoResponse, ServiceError> {
+) -> Result<impl IntoResponse> {
     let user = UserEntity::find_by_id(id)
         .one(&db)
         .await
@@ -40,7 +40,7 @@ pub async fn get_user(
 pub async fn post_user(
     State(db): State<DatabaseConnection>,
     WithRejection(Json(payload), _): WithRejection<Json<PostUserRequest>, ServiceError>,
-) -> Result<impl IntoResponse, ServiceError> {
+) -> Result<impl IntoResponse> {
     // FIXME: is this a correct usage of sea-orm?
     let mut user = entity::user::ActiveModel {
         name: ActiveValue::set(payload.name),
@@ -59,7 +59,7 @@ pub async fn post_user(
 pub async fn delete_user(
     State(db): State<DatabaseConnection>,
     WithRejection(Path(id), _): WithRejection<Path<i64>, ServiceError>,
-) -> Result<impl IntoResponse, ServiceError> {
+) -> Result<impl IntoResponse> {
     let res = UserEntity::delete_by_id(id)
         .exec(&db)
         .await
@@ -77,7 +77,7 @@ pub async fn put_user(
     State(db): State<DatabaseConnection>,
     WithRejection(Path(id), _): WithRejection<Path<i64>, ServiceError>,
     WithRejection(Json(payload), _): WithRejection<Json<PostUserRequest>, ServiceError>,
-) -> Result<impl IntoResponse, ServiceError> {
+) -> Result<impl IntoResponse> {
     let user = UserEntity::find_by_id(id)
         .one(&db)
         .await
@@ -110,9 +110,7 @@ pub async fn put_user(
 }
 
 #[debug_handler]
-pub async fn get_max_item(
-    State(db): State<DatabaseConnection>,
-) -> Result<impl IntoResponse, ServiceError> {
+pub async fn get_max_item(State(db): State<DatabaseConnection>) -> Result<impl IntoResponse> {
     let item = ItemEntity::find()
         .order_by_desc(ItemColumn::Id)
         .limit(1)
@@ -127,9 +125,7 @@ pub async fn get_max_item(
 }
 
 #[debug_handler]
-pub async fn get_max_user(
-    State(db): State<DatabaseConnection>,
-) -> Result<impl IntoResponse, ServiceError> {
+pub async fn get_max_user(State(db): State<DatabaseConnection>) -> Result<impl IntoResponse> {
     let user = UserEntity::find()
         .order_by_desc(UserColumn::Id)
         .limit(1)
