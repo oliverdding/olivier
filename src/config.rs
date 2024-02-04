@@ -11,7 +11,7 @@ pub struct GlobalConfig {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Log {
-    pub level: String,
+    pub directives: String,
     pub file: LogFile,
 }
 
@@ -19,7 +19,7 @@ pub struct Log {
 pub struct LogFile {
     pub enabled: bool,
     pub path: String,
-    pub level: String,
+    pub directives: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]

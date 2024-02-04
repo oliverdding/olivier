@@ -1,15 +1,27 @@
+# console logging
 [log]
-level = "warm"
+# set directives for console logging, see also https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives
+directives = "warm"
 
+# file logging
 [log.file]
+# enable/disable file logging
 enabled = true
-level = "info"
-path = "/tmp/oi"
+# set log file path for file logging
+path = "/tmp/olivier"
+# set directives for file logging, see also https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives
+directives = "info"
 
+# http service
 [service]
+# listened address
 host = "0.0.0.0"
+# listened port
 port = 8080
+# api path, must end with '/'
 prefix = "/"
 
+# database
 [service.database]
-uri = "postgres://postgres:po3tGre%y@127.0.0.1:5432/postgres"
+# database uri
+uri = "postgres://postgres:postgres@127.0.0.1:5432/postgres"
