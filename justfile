@@ -15,7 +15,7 @@ docker:
 generate-entities:
     sea-orm-cli generate entity -l --serde-skip-deserializing-primary-key --with-serde both --with-copy-enums -o ./entity/src
 
-# generate migration for schema
+# generate new migration for schema
 generate-migrate *NAME:
     sea-orm-cli migrate generate --local-time "{{ NAME }}"
 

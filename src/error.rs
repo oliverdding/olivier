@@ -20,13 +20,16 @@ pub enum ServiceError {
     UserNotFound(i64),
 
     #[error("cannot find post with id {0}")]
-    PostNotFound(i64),
+    ItemNotFound(i64),
 
     #[error("no item found in database")]
     ItemEmpty,
 
     #[error("no user found in database")]
     UserEmpty,
+
+    #[error("validation error: {0}")]
+    Validation(String),
 
     #[error("{0}")]
     JsonExtractorRejection(#[from] JsonRejection),
@@ -48,8 +51,9 @@ impl ServiceError {
             ServiceError::QueryExtractorRejection(_) => StatusCode::BAD_REQUEST,
             ServiceError::PathExtractorRejection(_) => StatusCode::BAD_REQUEST,
             ServiceError::UserNotFound(_) => StatusCode::NOT_FOUND,
-            ServiceError::PostNotFound(_) => StatusCode::NOT_FOUND,
+            ServiceError::ItemNotFound(_) => StatusCode::NOT_FOUND,
             ServiceError::JsonExtractorRejection(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            ServiceError::Validation(_) => StatusCode::UNPROCESSABLE_ENTITY,
             // 5xx
             ServiceError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -62,8 +66,9 @@ impl ServiceError {
             ServiceError::UserEmpty => unreachable!(),
 
             // 4xx
+            ServiceError::Validation(_) => 40000,
             ServiceError::UserNotFound(_) => 40001,
-            ServiceError::PostNotFound(_) => 40002,
+            ServiceError::ItemNotFound(_) => 40002,
             ServiceError::QueryExtractorRejection(err ) => match err {
                 QueryRejection::FailedToDeserializeQueryString(_) => 40100,
                 _ => todo!(),

@@ -1,4 +1,5 @@
 use crate::error::Result;
+use crate::protocol::Validate;
 use crate::{
     error::ServiceError,
     protocol::{PostUserRequest, Response},
@@ -17,7 +18,6 @@ use entity::user::Model as UserModel;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, QueryOrder, QuerySelect, Set,
 };
-
 
 #[debug_handler]
 pub async fn get_user(
@@ -40,6 +40,8 @@ pub async fn post_user(
     State(db): State<DatabaseConnection>,
     WithRejection(Json(payload), _): WithRejection<Json<PostUserRequest>, ServiceError>,
 ) -> Result<impl IntoResponse> {
+    payload.validate().await?;
+
     // FIXME: is this a correct usage of sea-orm?
     let mut user = entity::user::ActiveModel {
         name: ActiveValue::set(payload.name),

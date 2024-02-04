@@ -44,11 +44,11 @@ impl config::Service {
         let app = Router::new()
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/item"),
-                post(routes::root),
+                post(routes::post_item),
             )
             .route(
-                &format!("{}{}", &self.prefix, "api/v0/item"),
-                get(routes::root),
+                &format!("{}{}", &self.prefix, "api/v0/item/:id"),
+                get(routes::get_item),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/user"),
