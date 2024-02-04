@@ -1,16 +1,18 @@
-use std::time::Duration;
-
 use anyhow::{Context, Result};
 use axum::routing::post;
-use axum::{extract::MatchedPath, http::Request, response::Response, routing::get, Router};
+use axum::{routing::get, Router};
+use http::header;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
 use tokio_graceful_shutdown::SubsystemHandle;
-use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
-use tracing::{debug, error, info, info_span, warn, Span};
+use tower_http::decompression::DecompressionLayer;
+use tower_http::{
+    compression::CompressionLayer, cors::CorsLayer, propagate_header::PropagateHeaderLayer, trace,
+};
+use tracing::{debug, error, info, warn};
 
 use crate::config;
-use crate::routes::{self, v0};
+use crate::routes;
 
 impl config::Service {
     pub async fn run(self, subsys: SubsystemHandle) -> Result<()> {
@@ -42,71 +44,65 @@ impl config::Service {
         let app = Router::new()
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/item"),
-                post(v0::root),
+                post(routes::root),
             )
-            .route(&format!("{}{}", &self.prefix, "api/v0/item"), get(v0::root))
+            .route(
+                &format!("{}{}", &self.prefix, "api/v0/item"),
+                get(routes::root),
+            )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/user"),
-                post(v0::post_user),
+                post(routes::post_user),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/user/:id"),
-                get(v0::get_user).put(v0::put_user).delete(v0::delete_user),
+                get(routes::get_user)
+                    .put(routes::put_user)
+                    .delete(routes::delete_user),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/maxitem"),
-                get(v0::get_max_item),
+                get(routes::get_max_item),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/maxuser"),
-                get(v0::get_max_user),
+                get(routes::get_max_user),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/topstories"),
-                get(v0::root),
+                get(routes::root),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/newstories"),
-                get(v0::root),
+                get(routes::root),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/topaskes"),
-                get(v0::root),
+                get(routes::root),
             )
             .route(
                 &format!("{}{}", &self.prefix, "api/v0/newaskes"),
-                get(v0::root),
+                get(routes::root),
             )
             .with_state(db)
             .layer(
-                TraceLayer::new_for_http()
-                    .make_span_with(|request: &Request<_>| {
-                        let matched_path = request
-                            .extensions()
-                            .get::<MatchedPath>()
-                            .map(MatchedPath::as_str);
-
-                        info_span!(
-                            "http_request",
-                            method = ?request.method(),
-                            matched_path,
-                        )
-                    })
-                    .on_request(|_request: &Request<_>, _span: &Span| info!("request received"))
-                    .on_response(|response: &Response, latency: Duration, span: &Span| {
-                        span.record("status_code", &tracing::field::display(response.status()));
-                        info!("response sent in {:?}", latency);
-                    })
-                    .on_failure(
-                        |_error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
-                            warn!("request failed with error: {}", _error);
-                        },
-                    ),
+                trace::TraceLayer::new_for_http()
+                    .make_span_with(trace::DefaultMakeSpan::new().include_headers(true))
+                    .on_request(trace::DefaultOnRequest::new().level(tracing::Level::INFO))
+                    .on_response(trace::DefaultOnResponse::new().level(tracing::Level::INFO))
+                    .on_failure(trace::DefaultOnFailure::new().level(tracing::Level::WARN)),
             )
             .route(
                 &format!("{}{}", &self.prefix, "health"),
                 get(routes::health).head(routes::health),
-            );
+            )
+            .layer(DecompressionLayer::new())
+            .layer(CompressionLayer::new())
+            .layer(PropagateHeaderLayer::new(header::HeaderName::from_static(
+                "x-request-id",
+            )))
+            // TODO be more restrictive
+            .layer(CorsLayer::permissive());
 
         let listener = tokio::net::TcpListener::bind(format!(
             "{host}:{port}",

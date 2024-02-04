@@ -1,6 +1,6 @@
 mod protocol;
 mod routes;
-mod entry;
+mod service;
 mod config;
 mod error;
 mod log;

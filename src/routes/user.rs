@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::{
     error::ServiceError,
-    protocol::v0::{PostUserRequest, Response},
+    protocol::{PostUserRequest, Response},
 };
 use axum::{
     debug_handler,
@@ -10,8 +10,6 @@ use axum::{
     response::IntoResponse,
 };
 use axum_extra::extract::WithRejection;
-use entity::item::Column as ItemColumn;
-use entity::item::Entity as ItemEntity;
 use entity::user::ActiveModel as UserActiveModel;
 use entity::user::Column as UserColumn;
 use entity::user::Entity as UserEntity;
@@ -19,6 +17,7 @@ use entity::user::Model as UserModel;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, QueryOrder, QuerySelect, Set,
 };
+
 
 #[debug_handler]
 pub async fn get_user(
@@ -110,21 +109,6 @@ pub async fn put_user(
 }
 
 #[debug_handler]
-pub async fn get_max_item(State(db): State<DatabaseConnection>) -> Result<impl IntoResponse> {
-    let item = ItemEntity::find()
-        .order_by_desc(ItemColumn::Id)
-        .limit(1)
-        .one(&db)
-        .await
-        .map_err(ServiceError::Database)?;
-
-    match item {
-        Some(item) => Ok(Response::from(item)),
-        None => Err(ServiceError::ItemEmpty),
-    }
-}
-
-#[debug_handler]
 pub async fn get_max_user(State(db): State<DatabaseConnection>) -> Result<impl IntoResponse> {
     let user = UserEntity::find()
         .order_by_desc(UserColumn::Id)
@@ -137,8 +121,4 @@ pub async fn get_max_user(State(db): State<DatabaseConnection>) -> Result<impl I
         Some(user) => Ok(Response::from(user)),
         None => Err(ServiceError::UserEmpty),
     }
-}
-
-pub async fn root() -> &'static str {
-    "Hello, World!"
 }

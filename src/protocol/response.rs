@@ -1,10 +1,10 @@
 use axum::response::IntoResponse;
 use chrono::NaiveDateTime as DateTime;
 use entity::sea_orm_active_enums::Category;
-use serde::{Deserialize, Serialize};
 
 use entity::item::Model as Item;
 use entity::user::Model as User;
+use serde::Serialize;
 
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
@@ -122,15 +122,4 @@ impl IntoResponse for Response {
     fn into_response(self) -> axum::response::Response {
         axum::Json(self).into_response()
     }
-}
-
-#[derive(Deserialize)]
-pub struct GetUserRequest {
-    pub id: usize,
-}
-
-#[derive(Deserialize)]
-pub struct PostUserRequest {
-    pub name: String,
-    pub about: String,
 }
