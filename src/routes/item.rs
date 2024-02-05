@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::error::Result;
 use crate::protocol::{PostItemRequest, Validate};
 use crate::{error::ServiceError, protocol::Response};
@@ -9,6 +11,7 @@ use entity::item::ActiveModel as ItemActiveModel;
 use entity::item::Column as ItemColumn;
 use entity::item::Entity as ItemEntity;
 use entity::item::Model as ItemModel;
+use entity::sea_orm_active_enums::Category;
 use http::StatusCode;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, QueryOrder, QuerySelect,
@@ -37,30 +40,47 @@ pub async fn post_item(
 ) -> Result<impl IntoResponse> {
     payload.validate().await?;
 
+    let category = Category::from_str(&payload.category).expect("invalid category");
+
     // FIXME: is this a correct usage of sea-orm?
-    let item = match payload.category {
+    let mut item = match category {
         entity::sea_orm_active_enums::Category::Ask => entity::item::ActiveModel {
-            category: ActiveValue::set(payload.category),
+            deleted: ActiveValue::set(false),
+            dead: ActiveValue::set(false),
+            parent: ActiveValue::set(0),
+            url: ActiveValue::set("".to_string()),
+            score: ActiveValue::set(1),
+            category: ActiveValue::set(category),
             by: ActiveValue::set(payload.by),
             text: ActiveValue::set(payload.text.unwrap()),
             title: ActiveValue::set(payload.title.unwrap()),
             ..Default::default()
         },
         entity::sea_orm_active_enums::Category::Comment => entity::item::ActiveModel {
-            category: ActiveValue::set(payload.category),
+            deleted: ActiveValue::set(false),
+            dead: ActiveValue::set(false),
+            url: ActiveValue::set("".to_string()),
+            score: ActiveValue::set(1),
+            category: ActiveValue::set(category),
             by: ActiveValue::set(payload.by),
             text: ActiveValue::set(payload.text.unwrap()),
             parent: ActiveValue::set(payload.parent.unwrap()),
             ..Default::default()
         },
         entity::sea_orm_active_enums::Category::Story => entity::item::ActiveModel {
-            category: ActiveValue::set(payload.category),
+            deleted: ActiveValue::set(false),
+            dead: ActiveValue::set(false),
+            parent: ActiveValue::set(0),
+            score: ActiveValue::set(1),
+            category: ActiveValue::set(category),
             by: ActiveValue::set(payload.by),
             url: ActiveValue::set(payload.url.unwrap()),
             title: ActiveValue::set(payload.title.unwrap()),
             ..Default::default()
         },
     };
+
+    item.kids = ActiveValue::Set(vec![]);
 
     let res: ItemModel = item.insert(&db).await.map_err(ServiceError::Database)?;
 

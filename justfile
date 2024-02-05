@@ -13,7 +13,7 @@ docker:
 
 # generate entities from schema
 generate-entities:
-    sea-orm-cli generate entity -l --serde-skip-deserializing-primary-key --with-serde both --with-copy-enums -o ./entity/src
+    sea-orm-cli generate entity --serde-skip-deserializing-primary-key --with-serde both --with-copy-enums -o ./entity/src/entities
 
 # generate new migration for schema
 generate-migrate *NAME:

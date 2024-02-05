@@ -28,7 +28,6 @@ impl From<Item> for Response {
                 url: value.url,
                 score: value.score,
                 title: value.title,
-                descendants: value.desendants,
             }),
             Category::Ask => Response::ItemAsk(ItemAskResponseData {
                 id: value.id,
@@ -39,7 +38,6 @@ impl From<Item> for Response {
                 kids: value.kids,
                 score: value.score,
                 title: value.title,
-                descendants: value.desendants,
             }),
             Category::Comment => Response::ItemComment(ItemCommentResponseData {
                 id: value.id,
@@ -82,7 +80,6 @@ pub struct ItemStoryResponseData {
     pub url: String,
     pub score: i32,
     pub title: String,
-    pub descendants: i32,
 }
 
 #[derive(Debug, Serialize)]
@@ -106,7 +103,6 @@ pub struct ItemAskResponseData {
     pub kids: Vec<i64>,
     pub score: i32,
     pub title: String,
-    pub descendants: i32,
 }
 
 #[derive(Debug, Serialize)]

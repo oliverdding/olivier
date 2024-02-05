@@ -13,7 +13,7 @@ pub type Result<T, E = ServiceError> = core::result::Result<T, E>;
 #[derive(Error, Debug)]
 #[error("...")]
 pub enum ServiceError {
-    #[error("database error")]
+    #[error("{0}")]
     Database(#[from] sea_orm::DbErr),
 
     #[error("cannot find user with id {0}")]

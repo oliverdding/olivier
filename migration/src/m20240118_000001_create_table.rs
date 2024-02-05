@@ -94,7 +94,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Item::Url).string().not_null())
                     .col(ColumnDef::new(Item::Score).integer().not_null())
                     .col(ColumnDef::new(Item::Title).string().not_null())
-                    .col(ColumnDef::new(Item::Desendants).integer().not_null())
                     .to_owned(),
             )
             .await?;
@@ -169,5 +168,4 @@ enum Item {
     Url,
     Score,
     Title,
-    Desendants,
 }

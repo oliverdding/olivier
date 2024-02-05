@@ -87,7 +87,7 @@ impl config::Service {
             .with_state(db)
             .layer(
                 trace::TraceLayer::new_for_http()
-                    .make_span_with(trace::DefaultMakeSpan::new().include_headers(true))
+                    .make_span_with(trace::DefaultMakeSpan::new().include_headers(false))
                     .on_request(trace::DefaultOnRequest::new().level(tracing::Level::INFO))
                     .on_response(trace::DefaultOnResponse::new().level(tracing::Level::INFO))
                     .on_failure(trace::DefaultOnFailure::new().level(tracing::Level::WARN)),

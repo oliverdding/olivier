@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use entity::sea_orm_active_enums::Category;
 use serde::Deserialize;
 
@@ -26,7 +28,7 @@ impl Validate for PostUserRequest {
 
 #[derive(Deserialize)]
 pub struct PostItemRequest {
-    pub category: Category,
+    pub category: String,
     pub by: i64,
     pub text: Option<String>,
     pub parent: Option<i64>,
@@ -36,21 +38,13 @@ pub struct PostItemRequest {
 
 impl Validate for PostItemRequest {
     async fn validate(&self) -> Result<()> {
-        match self.category {
+        let category = Category::from_str(&self.category).map_err(|e| ServiceError::Validation(e.to_string()))?;
+
+        match category {
             Category::Ask => {
                 if !self.text.as_ref().is_some_and(|s| !s.is_empty()) {
                     return Err(ServiceError::Validation(
                         "ask's text must exist and not empty".to_string(),
-                    ));
-                }
-                if self.parent.is_some() {
-                    return Err(ServiceError::Validation(
-                        "ask could not have text".to_string(),
-                    ));
-                }
-                if self.url.is_some() {
-                    return Err(ServiceError::Validation(
-                        "ask could not have url".to_string(),
                     ));
                 }
                 if !self.title.as_ref().is_some_and(|url| !url.is_empty()) {
@@ -65,34 +59,14 @@ impl Validate for PostItemRequest {
                         "comment's text must exist and not empty".to_string(),
                     ));
                 }
-                if !self.parent.is_some_and(|s| true) {
+                if !self.parent.is_some_and(|_s| true) {
                     // TODO: check if parent exists
                     return Err(ServiceError::Validation(
                         "comment's parent must exist and not empty".to_string(),
                     ));
                 }
-                if self.url.is_some() {
-                    return Err(ServiceError::Validation(
-                        "comment could not have url".to_string(),
-                    ));
-                }
-                if self.title.is_some() {
-                    return Err(ServiceError::Validation(
-                        "comment could not have title".to_string(),
-                    ));
-                }
             }
             Category::Story => {
-                if self.text.is_some() {
-                    return Err(ServiceError::Validation(
-                        "story could not have text".to_string(),
-                    ));
-                }
-                if self.parent.is_some() {
-                    return Err(ServiceError::Validation(
-                        "story could not have text".to_string(),
-                    ));
-                }
                 if !self.url.as_ref().is_some_and(|url| !url.is_empty()) {
                     return Err(ServiceError::Validation(
                         "story's url must exist and not empty".to_string(),

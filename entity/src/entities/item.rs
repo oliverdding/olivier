@@ -21,7 +21,6 @@ pub struct Model {
     pub url: String,
     pub score: i32,
     pub title: String,
-    pub desendants: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
