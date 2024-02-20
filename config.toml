@@ -1,7 +1,7 @@
 # console logging
 [log]
 # set directives for console logging, see also https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives
-directives = "warm"
+directives = "warn"
 
 # file logging
 [log.file]
