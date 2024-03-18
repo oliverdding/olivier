@@ -40,7 +40,7 @@ pub async fn post_item(
 ) -> Result<impl IntoResponse> {
     payload.validate().await?;
 
-    let category = Category::from_str(&payload.category).expect("invalid category");
+    let category = Category::from_str(&payload.category).map_err(|err| ServiceError::Validation(err.to_string()))?;
 
     // FIXME: is this a correct usage of sea-orm?
     let mut item = match category {
