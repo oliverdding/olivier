@@ -5,7 +5,7 @@ use axum::{
 };
 use thiserror::Error;
 
-use crate::protocol::ErrorResponse;
+use crate::dto::ErrorResponse;
 
 pub type Result<T, E = ServiceError> = core::result::Result<T, E>;
 
