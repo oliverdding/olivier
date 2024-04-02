@@ -4,32 +4,24 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use thiserror::Error;
+use utoipa::ToSchema;
 
 use crate::dto::ErrorResponse;
 
-pub type Result<T, E = ServiceError> = core::result::Result<T, E>;
+pub type AppResult<T, E = ServiceError> = core::result::Result<T, E>;
 
 // Contains all error that generate by the service, which is useful to the user
-#[derive(Error, Debug)]
+#[derive(Error, Debug, ToSchema)]
 #[error("...")]
 pub enum ServiceError {
     #[error("{0}")]
     Database(#[from] sea_orm::DbErr),
 
-    #[error("cannot find user with id {0}")]
-    UserNotFound(i64),
+    #[error("{0}")]
+    InvalidInputError(#[from] garde::Report),
 
-    #[error("cannot find post with id {0}")]
-    ItemNotFound(i64),
-
-    #[error("no item found in database")]
-    ItemEmpty,
-
-    #[error("no user found in database")]
-    UserEmpty,
-
-    #[error("validation error: {0}")]
-    Validation(String),
+    #[error("cannot find todo with id {0}")]
+    TodoNotFoundError(i64),
 
     #[error("{0}")]
     JsonExtractorRejection(#[from] JsonRejection),
@@ -44,16 +36,12 @@ pub enum ServiceError {
 impl ServiceError {
     fn get_status_code(&self) -> StatusCode {
         match self {
-            // 2xx
-            ServiceError::ItemEmpty => StatusCode::NO_CONTENT,
-            ServiceError::UserEmpty => StatusCode::NO_CONTENT,
             // 4xx
             ServiceError::QueryExtractorRejection(_) => StatusCode::BAD_REQUEST,
             ServiceError::PathExtractorRejection(_) => StatusCode::BAD_REQUEST,
-            ServiceError::UserNotFound(_) => StatusCode::NOT_FOUND,
-            ServiceError::ItemNotFound(_) => StatusCode::NOT_FOUND,
             ServiceError::JsonExtractorRejection(_) => StatusCode::UNPROCESSABLE_ENTITY,
-            ServiceError::Validation(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            ServiceError::InvalidInputError(_) => StatusCode::BAD_REQUEST,
+            ServiceError::TodoNotFoundError(_) => StatusCode::NOT_FOUND,
             // 5xx
             ServiceError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -61,15 +49,9 @@ impl ServiceError {
 
     fn get_internal_code(&self) -> i32 {
         match self {
-            // 2xx
-            ServiceError::ItemEmpty => unreachable!(),
-            ServiceError::UserEmpty => unreachable!(),
-
             // 4xx
-            ServiceError::Validation(_) => 40000,
-            ServiceError::UserNotFound(_) => 40001,
-            ServiceError::ItemNotFound(_) => 40002,
-            ServiceError::QueryExtractorRejection(err ) => match err {
+            ServiceError::InvalidInputError(_) => 40000,
+            ServiceError::QueryExtractorRejection(err) => match err {
                 QueryRejection::FailedToDeserializeQueryString(_) => 40100,
                 _ => todo!(),
             },
@@ -85,6 +67,7 @@ impl ServiceError {
                 JsonRejection::BytesRejection(_) => 40303,
                 _ => todo!(),
             },
+            ServiceError::TodoNotFoundError(_) => 40400,
 
             // 5xx
             ServiceError::Database(err) => match err {
@@ -119,17 +102,13 @@ impl ServiceError {
 
 impl IntoResponse for ServiceError {
     fn into_response(self) -> Response {
-        match self {
-            ServiceError::ItemEmpty => self.get_status_code().into_response(),
-            ServiceError::UserEmpty => self.get_status_code().into_response(),
-            _ => (
-                self.get_status_code(),
-                ErrorResponse {
-                    code: self.get_internal_code(),
-                    message: self.get_prompt_message(),
-                },
-            )
-                .into_response(),
-        }
+        (
+            self.get_status_code(),
+            ErrorResponse {
+                code: self.get_internal_code(),
+                message: self.get_prompt_message(),
+            },
+        )
+            .into_response()
     }
 }

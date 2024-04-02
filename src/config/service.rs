@@ -4,13 +4,12 @@ use std::net::{AddrParseError, SocketAddr};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct Service {
+pub struct ServiceConfig {
     pub host: IpAddr,
     pub port: u16,
-    pub prefix: String,
 }
 
-impl Service {
+impl ServiceConfig {
     pub fn get_addr(&self) -> String {
         format!("{}:{}", self.host, self.port)
     }

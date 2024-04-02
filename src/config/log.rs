@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct Log {
+pub struct LogConfig {
     pub directives: String,
     pub file: LogFile,
 }

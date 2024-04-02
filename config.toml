@@ -18,8 +18,6 @@ directives = "info"
 host = "0.0.0.0"
 # listened port
 port = 8080
-# api path, must end with '/'
-prefix = "/"
 
 # database
 [database]

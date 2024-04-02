@@ -1,11 +1,11 @@
-use crate::config::Log;
+use crate::config::LogConfig;
 use anyhow::{Context, Result};
 use tracing::warn;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_log::LogTracer;
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Layer};
 
-pub fn init(log_config: &Log) -> Result<Option<WorkerGuard>> {
+pub fn init(log_config: &LogConfig) -> Result<Option<WorkerGuard>> {
     LogTracer::init().context("failed to initialize log tracer")?;
 
     // used to prompt the user whether the log configuration is fallback to the default configuration due to an error

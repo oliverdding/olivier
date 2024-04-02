@@ -13,9 +13,9 @@ use std::{env, path::PathBuf};
 // default value <- global configuration file <- user configuration file <- environment variables
 #[derive(Debug, Clone, Deserialize)]
 pub struct AppConfig {
-    pub log: Log,
-    pub service: Service,
-    pub database: Database,
+    pub log: LogConfig,
+    pub service: ServiceConfig,
+    pub database: DatabaseConfig,
 }
 
 pub fn new() -> Result<AppConfig, ConfigError> {

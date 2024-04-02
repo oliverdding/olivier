@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct Database {
+pub struct DatabaseConfig {
     pub uri: String,
 }
